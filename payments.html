@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vallfort Wedding · Accommodation Payment</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blush:  #f2e0d8;
+      --rose:   #c9897a;
+      --deep:   #7a4a3f;
+      --gold:   #b89a72;
+      --cream:  #fdf8f4;
+      --text:   #3d2b25;
+      --muted:  #8c7570;
+    }
+
+    body {
+      font-family: 'Jost', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 80px;
+    }
+
+    /* ── Header ── */
+    header { text-align: center; margin-bottom: 48px; }
+    .header-ornament { font-size: 22px; letter-spacing: 6px; color: var(--gold); margin-bottom: 10px; }
+    header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 300;
+      line-height: 1.15;
+      color: var(--deep);
+    }
+    header h1 em { font-style: italic; font-weight: 400; }
+    .header-sub {
+      margin-top: 12px;
+      font-size: 0.85rem;
+      font-weight: 300;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .divider {
+      display: flex; align-items: center; gap: 14px;
+      margin: 24px auto; max-width: 300px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: var(--gold); opacity: 0.5;
+    }
+    .header-links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .header-links a {
+      color: var(--rose);
+      text-decoration: none;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      transition: color 0.2s;
+    }
+    .header-links a:hover { color: var(--deep); }
+    .header-links .link-sep {
+      color: var(--gold);
+      opacity: 0.6;
+      font-size: 0.7rem;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border: 1px solid rgba(184, 154, 114, 0.25);
+      border-radius: 16px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 540px;
+      box-shadow: 0 4px 40px rgba(122, 74, 63, 0.07);
+    }
+
+    /* ── Search ── */
+    .search-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem; font-weight: 400;
+      color: var(--deep); display: block; margin-bottom: 6px;
+    }
+    .search-hint { font-size: 0.8rem; color: var(--muted); margin-bottom: 16px; }
+    .search-row { display: flex; gap: 10px; }
+    #nameInput {
+      flex: 1; padding: 13px 18px;
+      border: 1.5px solid rgba(184, 154, 114, 0.4);
+      border-radius: 10px;
+      font-family: 'Jost', sans-serif; font-size: 1rem;
+      color: var(--text); background: var(--cream);
+      outline: none; transition: border-color 0.2s;
+    }
+    #nameInput:focus { border-color: var(--rose); }
+    #searchBtn {
+      padding: 13px 22px;
+      background: var(--deep); color: #fff;
+      border: none; border-radius: 10px;
+      font-family: 'Jost', sans-serif; font-size: 0.9rem;
+      font-weight: 500; letter-spacing: 0.5px;
+      cursor: pointer; transition: background 0.2s;
+    }
+    #searchBtn:hover { background: var(--rose); }
+
+    /* ── Multiple results ── */
+    #multiResults { margin-top: 20px; display: none; }
+    #multiResults p { font-size: 0.85rem; color: var(--muted); margin-bottom: 10px; }
+    .result-option {
+      width: 100%; text-align: left;
+      padding: 12px 16px; margin-bottom: 8px;
+      border: 1.5px solid rgba(184, 154, 114, 0.35);
+      border-radius: 10px; background: var(--cream);
+      cursor: pointer;
+      font-family: 'Jost', sans-serif; font-size: 0.95rem;
+      color: var(--text); transition: border-color 0.2s, background 0.2s;
+    }
+    .result-option:hover { border-color: var(--rose); background: var(--blush); }
+    .result-option span { font-size: 0.78rem; color: var(--muted); display: block; margin-top: 2px; }
+
+    /* ── Error ── */
+    #errorMsg {
+      margin-top: 16px; padding: 12px 16px;
+      background: #fdf0ed; border: 1px solid #e8c4bb;
+      border-radius: 10px; font-size: 0.88rem;
+      color: var(--rose); display: none;
+    }
+
+    /* ── Result panel ── */
+    #result { margin-top: 28px; display: none; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    .result-greeting {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.55rem; font-weight: 400;
+      color: var(--deep); margin-bottom: 18px;
+    }
+    .result-greeting em { font-style: italic; }
+
+    .detail-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; margin-bottom: 20px;
+    }
+    .detail-box {
+      background: var(--cream);
+      border: 1px solid rgba(184, 154, 114, 0.25);
+      border-radius: 10px; padding: 14px 16px;
+    }
+    .detail-box .label {
+      font-size: 0.7rem; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--muted); margin-bottom: 4px;
+    }
+    .detail-box .value { font-size: 1rem; font-weight: 500; color: var(--text); }
+
+    .amount-banner {
+      background: var(--blush);
+      border: 1px solid rgba(201, 137, 122, 0.3);
+      border-radius: 12px; padding: 20px;
+      text-align: center; margin-bottom: 24px;
+    }
+    .amount-banner .amount-label {
+      font-size: 0.75rem; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--muted); margin-bottom: 6px;
+    }
+    .amount-banner .amount-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.6rem; font-weight: 600;
+      color: var(--deep); line-height: 1;
+    }
+
+    /* ── Payment toggle ── */
+    .payment-toggle-label {
+      font-size: 0.75rem; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--muted);
+      text-align: center; margin-bottom: 12px;
+    }
+    .payment-toggle {
+      display: flex; gap: 10px; margin-bottom: 24px;
+    }
+    .toggle-btn {
+      flex: 1; padding: 12px;
+      border: 2px solid rgba(184, 154, 114, 0.3);
+      border-radius: 12px; background: var(--cream);
+      cursor: pointer; font-family: 'Jost', sans-serif;
+      font-size: 0.9rem; font-weight: 500;
+      color: var(--muted); transition: all 0.2s;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+    }
+    .toggle-btn .toggle-icon { font-size: 1.3rem; }
+    .toggle-btn .toggle-sub { font-size: 0.7rem; font-weight: 300; letter-spacing: 0.5px; }
+    .toggle-btn.active {
+      border-color: var(--deep);
+      background: var(--deep); color: #fff;
+    }
+    .toggle-btn.active .toggle-sub { opacity: 0.75; }
+    .toggle-btn:not(.active):hover {
+      border-color: var(--rose); color: var(--rose);
+    }
+
+    /* ── QR section ── */
+    .qr-panel { display: none; text-align: center; animation: fadeIn 0.3s ease; }
+    .qr-panel.visible { display: block; }
+    .qr-instruction {
+      font-size: 0.82rem; color: var(--muted);
+      margin-bottom: 16px; line-height: 1.7;
+    }
+    .qr-instruction strong { color: var(--text); }
+    .qr-note {
+      display: inline-block;
+      background: #fff8ec;
+      border: 1px solid #e8d8b0;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      color: #7a6030;
+      margin-bottom: 14px;
+    }
+    #qrcode-revolut, #qrcode-venmo {
+      display: inline-block;
+      padding: 14px;
+      background: #fff;
+      border: 1.5px solid rgba(184, 154, 114, 0.35);
+      border-radius: 14px;
+      margin-bottom: 14px;
+    }
+    #qrcode-revolut canvas, #qrcode-revolut img,
+    #qrcode-venmo canvas, #qrcode-venmo img { display: block; }
+
+    .payment-badge {
+      display: inline-flex; align-items: center;
+      gap: 7px; font-size: 0.78rem; color: var(--muted);
+      background: var(--cream);
+      border: 1px solid rgba(184,154,114,0.25);
+      border-radius: 20px; padding: 5px 14px;
+    }
+    .badge-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%; display: inline-block;
+    }
+    .badge-dot.revolut { background: #191C33; }
+    .badge-dot.venmo   { background: #3D95CE; }
+
+    /* ── Confirm panel ── */
+    #confirm { margin-top: 28px; display: none; animation: fadeIn 0.4s ease; }
+    .confirm-prompt {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem; font-weight: 400;
+      color: var(--deep); margin-bottom: 6px;
+    }
+    .confirm-prompt em { font-style: italic; }
+    .confirm-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; }
+    .confirm-name-box {
+      background: var(--cream);
+      border: 1px solid rgba(184, 154, 114, 0.3);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+    }
+    .confirm-name-box .confirm-name {
+      font-size: 1.15rem; font-weight: 500; color: var(--text);
+    }
+    .confirm-name-box .confirm-villa {
+      font-size: 0.8rem; color: var(--muted); margin-top: 4px;
+    }
+    .confirm-btns { display: flex; gap: 10px; }
+    .confirm-yes {
+      flex: 1; padding: 13px;
+      background: var(--deep); color: #fff;
+      border: none; border-radius: 10px;
+      font-family: 'Jost', sans-serif; font-size: 0.9rem;
+      font-weight: 500; cursor: pointer; transition: background 0.2s;
+    }
+    .confirm-yes:hover { background: var(--rose); }
+    .confirm-no {
+      flex: 1; padding: 13px;
+      background: none; color: var(--muted);
+      border: 1.5px solid rgba(184, 154, 114, 0.4);
+      border-radius: 10px;
+      font-family: 'Jost', sans-serif; font-size: 0.9rem;
+      cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    }
+    .confirm-no:hover { border-color: var(--rose); color: var(--rose); }
+
+    /* ── Back btn ── */
+    .back-btn {
+      margin-top: 24px; background: none;
+      border: 1.5px solid rgba(184, 154, 114, 0.4);
+      border-radius: 10px; padding: 10px 20px;
+      font-family: 'Jost', sans-serif; font-size: 0.85rem;
+      color: var(--muted); cursor: pointer;
+      transition: border-color 0.2s, color 0.2s; width: 100%;
+    }
+    .back-btn:hover { border-color: var(--rose); color: var(--rose); }
+
+    footer {
+      margin-top: 48px; text-align: center;
+      font-size: 0.78rem; color: var(--muted); letter-spacing: 0.5px;
+    }
+
+    /* ── Password gate ── */
+    #pwGate {
+      position: fixed; inset: 0;
+      background: var(--cream);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 32px 20px;
+      z-index: 999;
+    }
+    #pwGate .gate-ornament { font-size: 20px; letter-spacing: 6px; color: var(--gold); margin-bottom: 12px; }
+    #pwGate h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem; font-weight: 300;
+      color: var(--deep); margin-bottom: 6px;
+    }
+    #pwGate h2 em { font-style: italic; }
+    #pwGate p { font-size: 0.82rem; color: var(--muted); margin-bottom: 28px; }
+    #pwGate input {
+      width: 100%; max-width: 320px;
+      padding: 13px 18px; margin-bottom: 12px;
+      border: 1.5px solid rgba(184, 154, 114, 0.4);
+      border-radius: 10px;
+      font-family: 'Jost', sans-serif; font-size: 1rem;
+      color: var(--text); background: #fff;
+      outline: none; text-align: center;
+      transition: border-color 0.2s;
+    }
+    #pwGate input:focus { border-color: var(--rose); }
+    #pwGate button {
+      width: 100%; max-width: 320px;
+      padding: 13px;
+      background: var(--deep); color: #fff;
+      border: none; border-radius: 10px;
+      font-family: 'Jost', sans-serif; font-size: 0.9rem;
+      font-weight: 500; cursor: pointer;
+      transition: background 0.2s;
+    }
+    #pwGate button:hover { background: var(--rose); }
+    #pwError {
+      margin-top: 12px; font-size: 0.82rem;
+      color: var(--rose); display: none;
+    }
+
+    /* ── Mobile deep link buttons ── */
+    .qr-only   { display: block; }
+    .mobile-only { display: none; }
+    .pay-deep-link {
+      display: block; width: 100%;
+      padding: 15px 20px; margin-bottom: 14px;
+      border-radius: 12px; border: none;
+      font-family: 'Jost', sans-serif; font-size: 1rem;
+      font-weight: 500; text-decoration: none;
+      text-align: center; cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .pay-deep-link:hover { opacity: 0.88; }
+    .pay-deep-link.revolut-link { background: #191C33; color: #fff; }
+    .pay-deep-link.venmo-link   { background: #3D95CE; color: #fff; }
+
+    /* ── Mobile overrides ── */
+    @media (max-width: 540px) {
+      .search-row { flex-direction: column; }
+      #searchBtn  { width: 100%; }
+      .header-sub-break { display: block; margin-top: 4px; }
+      .header-sub-sep { display: none; }
+      .qr-only    { display: none; }
+      .mobile-only { display: block; }
+      .card { padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Password gate -->
+  <div id="pwGate">
+    <div class="gate-ornament">✦ ✦ ✦</div>
+    <h2>Jess & Tom's <em>Payment Portal</em></h2>
+    <p>Enter the password to continue</p>
+    <input type="password" id="pwInput" placeholder="Password" autocomplete="off" />
+    <button id="pwBtn">Enter</button>
+    <p id="pwError">Incorrect password — try again!</p>
+  </div>
+
+  <header>
+    <div class="header-ornament">✦ ✦ ✦</div>
+    <h1>Jess & Tom's <em>Payment Portal</em></h1>
+    <p class="header-sub">29 May – 01 June 2026</p>
+    <div class="divider"><span>🍷</span></div>
+    <div class="header-links">
+      <a href="https://withjoy.com/jessica-and-thomas-2026" target="_blank">withjoy.com/jessica-and-thomas-2026</a>
+      <span class="link-sep">✦</span>
+      <a href="https://instagram.com/jessandtom2026" target="_blank">@jessandtom2026</a>
+    </div>
+  </header>
+
+  <div class="card">
+
+    <!-- Search -->
+    <label class="search-label" for="nameInput">Find your booking</label>
+    <p class="search-hint">Enter your first name, last name, or both</p>
+    <div class="search-row">
+      <input type="text" id="nameInput" placeholder="e.g. Annie, O'Malley, Chris…" autocomplete="off" />
+      <button id="searchBtn">Look up</button>
+    </div>
+
+    <!-- Multiple matches -->
+    <div id="multiResults">
+      <p>We found a few matches — please select yours:</p>
+      <div id="multiList"></div>
+    </div>
+
+    <!-- Confirm identity -->
+    <div id="confirm">
+      <p class="confirm-prompt">Is this <em>you?</em></p>
+      <p class="confirm-sub">We'd hate to charge you for someone else's good time 🥂</p>
+      <div class="confirm-name-box">
+        <div class="confirm-name" id="confirmName"></div>
+        <div class="confirm-villa" id="confirmVilla"></div>
+      </div>
+      <div class="confirm-btns">
+        <button class="confirm-yes" id="confirmYesBtn">Yes, that's me</button>
+        <button class="confirm-no" onclick="resetSearch()">That's not me</button>
+      </div>
+    </div>
+
+    <!-- Not found -->
+    <div id="errorMsg">
+      We couldn't find that name. Try a different spelling, or use just your first name.
+    </div>
+
+    <!-- Result -->
+    <div id="result">
+      <p class="result-greeting">Hello, <em id="guestName"></em>! 👋</p>
+
+      <div class="detail-grid">
+        <div class="detail-box">
+          <div class="label">Villa</div>
+          <div class="value" id="guestVilla"></div>
+        </div>
+        <div class="detail-box">
+          <div class="label">Nights</div>
+          <div class="value" id="guestNights"></div>
+        </div>
+        <div class="detail-box">
+          <div class="label">Per night</div>
+          <div class="value" id="guestPerNight"></div>
+        </div>
+        <div class="detail-box">
+          <div class="label">Staying as</div>
+          <div class="value" id="guestParty"></div>
+        </div>
+      </div>
+
+      <div class="amount-banner">
+        <div class="amount-label">Total amount due</div>
+        <div class="amount-value" id="guestCost"></div>
+      </div>
+
+      <!-- Payment method toggle -->
+      <p class="payment-toggle-label">Choose your payment method</p>
+      <div class="payment-toggle">
+        <button class="toggle-btn active" id="btnRevolut" onclick="selectPayment('revolut')">
+          <span class="toggle-icon">💳</span>
+          Revolut
+          <span class="toggle-sub">Pay in EUR</span>
+        </button>
+        <button class="toggle-btn" id="btnVenmo" onclick="selectPayment('venmo')">
+          <span class="toggle-icon">🇺🇸</span>
+          Venmo
+          <span class="toggle-sub">US guests · Pay in USD</span>
+        </button>
+      </div>
+
+      <!-- Revolut QR / deep link -->
+      <div class="qr-panel visible" id="panelRevolut">
+        <div class="qr-only">
+          <p class="qr-instruction">
+            Scan to open Revolut and send payment.<br/>
+            <strong>Enter the EUR amount shown above.</strong>
+          </p>
+          <div id="qrcode-revolut"></div>
+        </div>
+        <div class="mobile-only">
+          <p class="qr-instruction">
+            Tap below to open Revolut and send payment.<br/>
+            <strong>Enter the EUR amount shown above.</strong>
+          </p>
+          <a class="pay-deep-link revolut-link" href="https://revolut.me/jessfontani" target="_blank">Open Revolut to pay</a>
+        </div>
+        <div><span class="payment-badge"><span class="badge-dot revolut"></span>Pay via Revolut · @jessfontani</span></div>
+      </div>
+
+      <!-- Venmo QR / deep link -->
+      <div class="qr-panel" id="panelVenmo">
+        <div class="qr-only">
+          <p class="qr-instruction">
+            Scan to open Venmo and send payment.<br/>
+            <strong>Please send the USD equivalent of the amount above.</strong>
+          </p>
+          <span class="qr-note">💱 Convert EUR → USD at today's rate before paying</span><br/>
+          <div id="qrcode-venmo"></div>
+        </div>
+        <div class="mobile-only">
+          <p class="qr-instruction">
+            Tap below to open Venmo and send payment.<br/>
+            <strong>Please send the USD equivalent of the amount above.</strong>
+          </p>
+          <span class="qr-note">💱 Convert EUR → USD at today's rate before paying</span>
+          <br/><br/>
+          <a class="pay-deep-link venmo-link" href="https://venmo.com/u/jessicafontanilla" target="_blank">Open Venmo to pay</a>
+        </div>
+        <div><span class="payment-badge"><span class="badge-dot venmo"></span>Pay via Venmo · @jessicafontanilla</span></div>
+      </div>
+
+      <button class="back-btn" onclick="resetSearch()">← Search again</button>
+    </div>
+  </div>
+
+  <footer>💒 &nbsp; We can't wait to celebrate with you &nbsp; 💒</footer>
+
+  <script>
+    // ── Password gate ──
+    const PASSWORD = "lovelymisslucy";
+    function checkPassword() {
+      if (document.getElementById('pwInput').value === PASSWORD) {
+        document.getElementById('pwGate').style.display = 'none';
+      } else {
+        document.getElementById('pwError').style.display = 'block';
+        document.getElementById('pwInput').value = '';
+        document.getElementById('pwInput').focus();
+      }
+    }
+    document.getElementById('pwBtn').addEventListener('click', checkPassword);
+    document.getElementById('pwInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') checkPassword();
+    });
+
+    const REVOLUT_HANDLE = "jessfontani";
+    const VENMO_HANDLE   = "jessicafontanilla";
+
+    // Build guest list from spreadsheet data
+    // Each entry: guest1, guest2 (or null), villa, nights, perNight, cost
+    const rawGuests = [
+      // Can Torres
+      { g1: "Annie Dinan",       g2: "Cameron Barry",    party: "Couple",        villa: "Can Torres", nights: 3, perNight: 125,  cost: 375   },
+      { g1: "Lea Strugar",       g2: "Franz Lawlor",     party: "Couple",        villa: "Can Torres", nights: 3, perNight: 125,  cost: 375   },
+      { g1: "Eoin Prunty",       g2: null,               party: "Individual (Sharing)", villa: "Can Torres", nights: 3, perNight: 62.5, cost: 187.5 },
+      { g1: "Gavin Mathews",     g2: null,               party: "Individual (Sharing)", villa: "Can Torres", nights: 3, perNight: 62.5, cost: 187.5 },
+      { g1: "Anna Aboud",        g2: "Rob Aboud",        party: "Couple",        villa: "Can Torres", nights: 3, perNight: 125,  cost: 375   },
+      { g1: "Leslie Walsh",      g2: "Conor McGurry",    party: "Couple",        villa: "Can Torres", nights: 3, perNight: 125,  cost: 375   },
+      { g1: "Elaine Moyles",     g2: "Stephen Moyles",   party: "Couple",        villa: "Can Torres", nights: 3, perNight: 125,  cost: 375   },
+      { g1: "Elaine McManus",    g2: "Ed Aboud",         party: "Couple",        villa: "Can Torres", nights: 2, perNight: 125,  cost: 250   },
+      { g1: "Victoria Kelly",    g2: "Richie Kelly",     party: "Couple",        villa: "Can Torres", nights: 3, perNight: 125,  cost: 375   },
+      { g1: "Kate Geraghty",     g2: "Jason McCarthy",   party: "Couple",        villa: "Can Torres", nights: 3, perNight: 125,  cost: 375   },
+      { g1: "Natasha O'Malley",  g2: "Darragh O'Malley", party: "Couple",        villa: "Can Torres", nights: 3, perNight: 125,  cost: 375   },
+      { g1: "Sarah Gallagher",   g2: "Brendan Vaughan",  party: "Couple",        villa: "Can Torres", nights: 3, perNight: 125,  cost: 375   },
+      { g1: "Alice Hopkins",     g2: "Brendan Beattie",  party: "Couple",        villa: "Can Torres", nights: 2, perNight: 125,  cost: 250   },
+      { g1: "Sinead Doyle",      g2: null,               party: "Individual (Sharing)", villa: "Can Torres", nights: 3, perNight: 62.5, cost: 187.5 },
+      { g1: "Gillian Coleman",   g2: null,               party: "Individual (Sharing)", villa: "Can Torres", nights: 3, perNight: 62.5, cost: 187.5 },
+      { g1: "Matt O'Rourke",     g2: null,               party: "Individual (Sharing)", villa: "Can Torres", nights: 3, perNight: 62.5, cost: 187.5 },
+      { g1: "Cian Ó Cuirc",      g2: null,               party: "Individual (Sharing)", villa: "Can Torres", nights: 3, perNight: 62.5, cost: 187.5 },
+      { g1: "Rachel Coffey",     g2: "Martin O'Brien",   party: "Couple",        villa: "Can Torres", nights: 3, perNight: 125,  cost: 375   },
+      // Cal Pauet
+      { g1: "Hope Fitzgerald",   g2: "Patrick Fitzgerald", party: "Couple",        villa: "Cal Pauet", nights: 3, perNight: 125, cost: 375   },
+      { g1: "Elizabeth Kenny",   g2: "Ciaran Corcoran",    party: "Couple",        villa: "Cal Pauet", nights: 3, perNight: 125, cost: 375   },
+      { g1: "Katie Walsh",       g2: "Carl McNab",         party: "Couple",        villa: "Cal Pauet", nights: 3, perNight: 125, cost: 375   },
+      { g1: "Nyssa Hughes",      g2: null,                 party: "Individual",          villa: "Cal Pauet", nights: 3, perNight: 85,  cost: 255   },
+      { g1: "Danielle Blakeman", g2: null,                 party: "Individual",          villa: "Cal Pauet", nights: 2, perNight: 85,  cost: 170   },
+      // Cal Noia
+      { g1: "Katie O'Brien",     g2: "Jamie Cullen",     party: "Couple",        villa: "Cal Noia", nights: 3, perNight: 125, cost: 375   },
+      { g1: "Katie Dawson",      g2: "Bob Hilvers",      party: "Couple",        villa: "Cal Noia", nights: 3, perNight: 125, cost: 375   },
+      { g1: "Chris Thompson",    g2: null,               party: "Individual",          villa: "Cal Noia", nights: 3, perNight: 85,  cost: 255   },
+      { g1: "Francesca Barajas", g2: "Jorge Barajas",    party: "Couple",        villa: "Cal Noia", nights: 3, perNight: 125, cost: 375   },
+      { g1: "Celine Rodriguez",  g2: null,               party: "Individual",          villa: "Cal Noia", nights: 3, perNight: 85,  cost: 255   },
+    ];
+
+    // Pre-process: build searchable tokens and display name
+    const guests = rawGuests.map(g => {
+      const names = [g.g1, g.g2].filter(Boolean);
+      const display = names.join(" & ");
+      // All first names, last names, and full names — lowercased
+      const tokens = [];
+      names.forEach(n => {
+        const parts = n.toLowerCase().split(/\s+/);
+        tokens.push(...parts);          // first name, last name individually
+        tokens.push(n.toLowerCase());   // full name
+      });
+      return { ...g, display, tokens };
+    });
+
+    function formatCurrency(amount) {
+      return '€' + (amount % 1 === 0 ? amount.toFixed(0) : amount.toFixed(2));
+    }
+
+    function normalise(str) {
+      // Fold accented chars and apostrophes for fuzzy matching
+      return str.toLowerCase()
+        .replace(/[''`]/g, "'")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function findGuests(query) {
+      const q = normalise(query.trim());
+      if (!q) return [];
+      return guests.filter(g =>
+        g.tokens.some(t => { const nt = normalise(t); return nt.includes(q) || (nt.length >= 2 && q.includes(nt)); })
+      );
+    }
+
+    let qrRevolut = null, qrVenmo = null;
+    let currentPayment = 'revolut';
+
+    function selectPayment(method) {
+      currentPayment = method;
+      document.getElementById('btnRevolut').classList.toggle('active', method === 'revolut');
+      document.getElementById('btnVenmo').classList.toggle('active', method === 'venmo');
+      document.getElementById('panelRevolut').classList.toggle('visible', method === 'revolut');
+      document.getElementById('panelVenmo').classList.toggle('visible', method === 'venmo');
+    }
+
+    function showConfirm(guest) {
+      document.getElementById('multiResults').style.display = 'none';
+      document.getElementById('errorMsg').style.display = 'none';
+      document.getElementById('result').style.display = 'none';
+
+      document.getElementById('confirmName').textContent  = guest.display;
+      document.getElementById('confirmVilla').textContent = guest.villa;
+      document.getElementById('confirmYesBtn').onclick = () => showGuest(guest);
+
+      document.getElementById('confirm').style.display = 'block';
+      document.getElementById('confirm').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function showGuest(guest) {
+      document.getElementById('confirm').style.display = 'none';
+      document.getElementById('multiResults').style.display = 'none';
+      document.getElementById('errorMsg').style.display = 'none';
+
+      document.getElementById('guestName').textContent    = guest.display;
+      document.getElementById('guestVilla').textContent   = guest.villa;
+      document.getElementById('guestNights').textContent  = guest.nights + (guest.nights === 1 ? ' night' : ' nights');
+      document.getElementById('guestPerNight').textContent = formatCurrency(guest.perNight) + ' / night';
+      document.getElementById('guestParty').textContent   = guest.party;
+      document.getElementById('guestCost').textContent    = formatCurrency(guest.cost);
+
+      // Generate Revolut QR
+      const revContainer = document.getElementById('qrcode-revolut');
+      revContainer.innerHTML = '';
+      qrRevolut = new QRCode(revContainer, {
+        text: `https://revolut.me/${REVOLUT_HANDLE}`,
+        width: 200, height: 200,
+        colorDark: "#3d2b25", colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      // Generate Venmo QR
+      const venContainer = document.getElementById('qrcode-venmo');
+      venContainer.innerHTML = '';
+      qrVenmo = new QRCode(venContainer, {
+        text: `https://account.venmo.com/u/${VENMO_HANDLE}`,
+        width: 200, height: 200,
+        colorDark: "#3D95CE", colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      // Reset to Revolut tab
+      selectPayment('revolut');
+
+      document.getElementById('result').style.display = 'block';
+      document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function doSearch() {
+      const query = document.getElementById('nameInput').value;
+      const matches = findGuests(query);
+
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('errorMsg').style.display = 'none';
+      document.getElementById('multiResults').style.display = 'none';
+
+      if (matches.length === 0) {
+        document.getElementById('errorMsg').style.display = 'block';
+      } else if (matches.length === 1) {
+        showConfirm(matches[0]);
+      } else {
+        const list = document.getElementById('multiList');
+        list.innerHTML = '';
+        matches.forEach(g => {
+          const btn = document.createElement('button');
+          btn.className = 'result-option';
+          btn.innerHTML = `${g.display}<span>${g.villa}</span>`;
+          btn.onclick = () => {
+            document.getElementById('multiResults').style.display = 'none';
+            showConfirm(g);
+          };
+          list.appendChild(btn);
+        });
+        document.getElementById('multiResults').style.display = 'block';
+      }
+    }
+
+    function resetSearch() {
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('confirm').style.display = 'none';
+      document.getElementById('errorMsg').style.display = 'none';
+      document.getElementById('multiResults').style.display = 'none';
+      document.getElementById('nameInput').value = '';
+      document.getElementById('nameInput').focus();
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', doSearch);
+    document.getElementById('nameInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doSearch();
+    });
+  </script>
+</body>
+</html>
